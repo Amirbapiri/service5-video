@@ -25,6 +25,19 @@ SALES_IMAGE     := $(BASE_IMAGE_NAME)/$(SALES_APP):$(VERSION)
 METRICS_IMAGE   := $(BASE_IMAGE_NAME)/metrics:$(VERSION)
 AUTH_IMAGE      := $(BASE_IMAGE_NAME)/$(AUTH_APP):$(VERSION)
 
+
+dev-docker:
+	docker pull $(GOLANG) & \
+	docker pull $(ALPINE) & \
+	docker pull $(KIND) & \
+	docker pull $(POSTGRES) & \
+	docker pull $(GRAFANA) & \
+	docker pull $(PROMETHEUS) & \
+	docker pull $(TEMPO) & \
+	docker pull $(LOKI) & \
+	docker pull $(PROMTAIL) & \
+	wait;
+
 # ==============================================================================
 # Running from within k8s/kind
 
@@ -34,8 +47,8 @@ run:
 dev-up:
 	kind create cluster \
 		--image $(KIND) \
-		--name $(KIND_CLUSTER) \ 
-		--config zarf/k8s/kind-config.yml
+		--name $(KIND_CLUSTER) \
+		--config zarf/k8s/dev/kind-config.yml
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
 dev-down:
