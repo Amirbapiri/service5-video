@@ -21,10 +21,24 @@ SALES_APP       := sales
 AUTH_APP        := auth
 BASE_IMAGE_NAME := localhost/ardanlabs
 VERSION         := 0.0.1
-SALES_IMAGE     := $(BASE_IMAGE_NAME)/$(SALES_APP):$(VERSION)
+SERVICE_IMAGE     := $(BASE_IMAGE_NAME)/$(SALES_APP):$(VERSION)
 METRICS_IMAGE   := $(BASE_IMAGE_NAME)/metrics:$(VERSION)
 AUTH_IMAGE      := $(BASE_IMAGE_NAME)/$(AUTH_APP):$(VERSION)
 
+# VERSION       := "0.0.1-$(shell git rev-parse --short HEAD)"
+
+# ==============================================================================
+# Building containers
+
+all: service
+
+sales:
+	docker build \
+		-f zarf/docker/dockerfile.service \
+		-t $(SERVICE_IMAGE) \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		.
 
 dev-docker:
 	docker pull $(GOLANG) & \
@@ -47,7 +61,7 @@ run:
 dev-up:
 	kind create cluster \
 		--image $(KIND) \
-		--name $(KIND_CLUSTER) \
+		--name $(KIND_CLUSTER) \	
 		--config zarf/k8s/dev/kind-config.yml
 	kubectl wait --timeout=120s --namespace=local-path-storage --for=condition=Available deployment/local-path-provisioner
 
@@ -62,7 +76,7 @@ dev-status:
 # ------------------------------------------------------------------------------
 
 dev-load:
-	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER) & \
+	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER) & \
 	kind load docker-image $(METRICS_IMAGE) --name $(KIND_CLUSTER) & \
 	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER) & \
 	wait;
